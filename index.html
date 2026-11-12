@@ -1,0 +1,122 @@
+<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Wahana Algoritma 3D</title>
+<style>
+:root{color-scheme:dark;--bg:#070b1d;--g:rgba(14,22,58,.78);--tx:#e8ecff;--mu:#9aa6d6;--c1:#22d3ee;--c2:#a78bfa;--c3:#f472b6;--ok:#4ade80;--bad:#fb7185}
+*{box-sizing:border-box}html,body{height:100%;margin:0;background:radial-gradient(circle at 30% 20%,#1b1650,#070b1d);color:var(--tx);font:15px/1.5 system-ui,Segoe UI,Roboto,sans-serif;overflow:hidden}
+#c{position:fixed;inset:0;width:100%;height:100%}
+#hud{position:fixed;top:0;left:0;right:0;z-index:5;display:flex;gap:10px;align-items:center;padding:8px 12px;padding-top:calc(8px + env(safe-area-inset-top,0px));background:var(--g);backdrop-filter:blur(12px);border-bottom:1px solid #fff2}
+#hud b{white-space:nowrap}#nav{display:flex;gap:4px;margin-left:auto;overflow-x:auto}
+.nv{background:#ffffff12;color:var(--tx);border:1px solid #fff2;border-radius:10px;padding:4px 10px;cursor:pointer;white-space:nowrap}.nv.on{background:var(--c1);color:#041;border-color:var(--c1)}.nv:disabled{opacity:.35;cursor:not-allowed}
+#tm,#xp{font:700 14px ui-monospace,monospace;color:var(--c1);white-space:nowrap}#xp{color:#fde047}
+#panel{position:fixed;right:12px;top:calc(62px + env(safe-area-inset-top,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));width:min(600px,calc(100% - 24px));overflow:auto;padding:16px 18px;background:var(--g);backdrop-filter:blur(16px);border:1px solid #fff3;border-radius:18px;box-shadow:0 0 40px #22d3ee22;z-index:4}
+h2{margin:.2em 0 .4em;font-size:21px}h3{margin:.9em 0 .3em;font-size:15px;color:var(--c1)}p{margin:.3em 0}
+.row{display:flex;flex-wrap:wrap;gap:8px}.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.btn{background:linear-gradient(90deg,var(--c1),var(--c2));color:#06102a;font-weight:800;border:0;border-radius:12px;padding:10px 16px;cursor:pointer;margin-top:10px}.btn.big{width:100%;font-size:17px;padding:14px}.btn:disabled{opacity:.4}
+.chip,.cd,.av{background:#ffffff14;color:var(--tx);border:1px solid #fff3;border-radius:12px;padding:6px 12px;cursor:pointer;font:inherit}.chip.on,.av.on{border-color:var(--c1);background:#22d3ee33;box-shadow:0 0 12px #22d3ee66}
+.cd{font:13px ui-monospace,monospace;white-space:pre;text-align:left}.cd.a{border-color:var(--c2)}.bank{display:flex;flex-direction:column;gap:5px;min-height:40px;padding:8px;border:1px dashed #fff3;border-radius:12px;align-items:flex-start}
+input,select,textarea{width:100%;background:#0a1030;color:var(--tx);border:1px solid #fff3;border-radius:10px;padding:8px;font:inherit}label{display:block;font-size:13px;color:var(--mu);margin:6px 0}
+pre{background:#0a1030;border:1px solid #fff2;border-radius:10px;padding:10px;font-size:12.5px;overflow:auto;margin:0}code{background:#ffffff18;border-radius:6px;padding:1px 6px;margin-right:4px}
+.nd{margin:0 auto;padding:5px 10px;text-align:center;border:2px solid var(--c1);background:#0b1233;font:12.5px ui-monospace,monospace;transition:.2s;max-width:96%}.nd small{color:var(--mu)}
+.nd.s,.nd.e{border-radius:20px;border-color:var(--ok)}.nd.i,.nd.o{border-color:var(--c2);border-radius:4px 16px}.nd.d{border-color:var(--c3);border-radius:28px}
+.nd.on{background:#22d3ee44;box-shadow:0 0 16px var(--c1);transform:scale(1.05)}.ar{text-align:center;color:var(--mu);font-size:11px;line-height:1.1}
+#msg{margin-top:8px;font-weight:700;min-height:24px}.ok{color:var(--ok)}.bad{color:var(--bad)}
+#pv img{width:100%;border-radius:12px;margin-top:12px;border:1px solid #fff3}
+@media(max-width:720px){#panel{left:8px;right:8px;width:auto;top:auto;height:64%;padding:12px}.tt,#hud b{display:none}.cols{grid-template-columns:1fr}}
+</style></head><body>
+<canvas id="c"></canvas>
+<div id="hud"><b>🎢 WAHANA ALGORITMA 3D</b><span id="tm">67:30</span><span id="xp">⭐ 0 XP</span><nav id="nav"></nav></div>
+<main id="panel"></main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const $=s=>document.querySelector(s),esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])),fm=s=>Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+const Z=[['Welcome Hub','10'],['Virtual Lab','20'],['Challenge Arena','25'],['Reflection Camp','10'],['Victory Hall','2,5']];
+const AV=[['🤖 Robo',0x22d3ee],['👽 Alien',0xa78bfa],['🐱 Neko',0xf472b6]];
+const W=[
+{n:'Sequential Zone',ic:'📐',cl:0x38bdf8,q:'Hitung Luas & Keliling Persegi Panjang',d:'Sequence: instruksi dijalankan berurutan dari atas ke bawah.',I:[['p','Panjang',8],['l','Lebar',5]],
+N:[{t:'s',x:'MULAI'},{t:'i',x:'INPUT p, l'},{t:'p',x:'luas ← p × l',f:e=>e.luas=e.p*e.l},{t:'p',x:'keliling ← 2 × (p + l)',f:e=>e.kel=2*(e.p+e.l)},{t:'o',x:'OUTPUT luas, keliling',f:e=>`Luas = ${e.luas}, Keliling = ${e.kel}`},{t:'e',x:'SELESAI'}],
+P:['MULAI','INPUT p, l','luas ← p × l','keliling ← 2 × (p + l)','OUTPUT luas, keliling','SELESAI']},
+{n:'Branching Gate 1',ic:'🏸',cl:0x4ade80,q:'Keputusan Main Bulutangkis',d:'Selection (JIKA–SELAIN ITU): jalur dipilih berdasarkan kondisi.',I:[['c','Cuaca','Cerah',['Cerah','Hujan']]],
+N:[{t:'s',x:'MULAI'},{t:'i',x:'INPUT cuaca'},{t:'d',x:'cuaca = “Hujan” ?',f:e=>e.c=='Hujan',y:3,n:4},{t:'o',x:'OUTPUT “Main di GOR”',f:e=>'Hujan → Main di GOR',g:5},{t:'o',x:'OUTPUT “Main di lapangan”',f:e=>'Cerah → Main di lapangan!'},{t:'e',x:'SELESAI'}],
+P:['MULAI','INPUT cuaca','JIKA cuaca = “Hujan” MAKA','  OUTPUT “Main di GOR”','SELAIN ITU','  OUTPUT “Main di lapangan”','AKHIR JIKA','SELESAI']},
+{n:'Security Checkpoint',ic:'🔐',cl:0xfacc15,q:'Sistem Login Username & Password',d:'Kondisi majemuk dengan operator logika DAN (AND).',I:[['u','Username','admin'],['pw','Password','1234']],
+N:[{t:'s',x:'MULAI'},{t:'i',x:'INPUT username, password'},{t:'d',x:'user = “admin” DAN pass = “1234” ?',f:e=>e.u=='admin'&&e.pw=='1234',y:3,n:4},{t:'o',x:'OUTPUT “Login berhasil”',f:e=>'✅ Login berhasil',g:5},{t:'o',x:'OUTPUT “Akses ditolak”',f:e=>'⛔ Akses ditolak'},{t:'e',x:'SELESAI'}],
+P:['MULAI','INPUT username, password','JIKA username = “admin” DAN password = “1234” MAKA','  OUTPUT “Login berhasil”','SELAIN ITU','  OUTPUT “Akses ditolak”','AKHIR JIKA','SELESAI']},
+{n:'Graduation Tower',ic:'🎓',cl:0xfb923c,q:'Penentuan Kelulusan Nilai Siswa',d:'Multi-kondisi: beberapa percabangan bertingkat (JIKA bersarang).',I:[['nl','Nilai',80],['h','Kehadiran (%)',85]],
+N:[{t:'s',x:'MULAI'},{t:'i',x:'INPUT nilai, hadir'},{t:'d',x:'nilai ≥ 75 DAN hadir ≥ 80 ?',f:e=>e.nl>=75&&e.h>=80,y:3,n:4},{t:'o',x:'OUTPUT “LULUS”',f:e=>'🎉 LULUS',g:7},{t:'d',x:'nilai ≥ 60 ?',f:e=>e.nl>=60,y:5,n:6},{t:'o',x:'OUTPUT “REMEDIAL”',f:e=>'📘 REMEDIAL',g:7},{t:'o',x:'OUTPUT “TIDAK LULUS”',f:e=>'❌ TIDAK LULUS'},{t:'e',x:'SELESAI'}],
+P:['MULAI','INPUT nilai, hadir','JIKA nilai ≥ 75 DAN hadir ≥ 80 MAKA','  OUTPUT “LULUS”','SELAIN ITU JIKA nilai ≥ 60 MAKA','  OUTPUT “REMEDIAL”','SELAIN ITU','  OUTPUT “TIDAK LULUS”','AKHIR JIKA','SELESAI']},
+{n:'Smart Market',ic:'🛒',cl:0xf472b6,q:'Kasir Belanja & Diskon Aritmatika',d:'Gabungan sequence + selection: diskon 10% jika total ≥ Rp100.000.',I:[['hg','Harga satuan (Rp)',30000],['q','Jumlah',4]],
+N:[{t:'s',x:'MULAI'},{t:'i',x:'INPUT harga, jumlah'},{t:'p',x:'total ← harga × jumlah',f:e=>e.tot=e.hg*e.q},{t:'d',x:'total ≥ 100000 ?',f:e=>e.tot>=100000,y:4,n:5},{t:'p',x:'diskon ← 10',f:e=>e.dis=10,g:6},{t:'p',x:'diskon ← 0',f:e=>e.dis=0},{t:'p',x:'bayar ← total − total × diskon / 100',f:e=>e.bayar=e.tot-e.tot*e.dis/100},{t:'o',x:'OUTPUT bayar',f:e=>`Total bayar = Rp ${e.bayar}`},{t:'e',x:'SELESAI'}],
+P:['MULAI','INPUT harga, jumlah','total ← harga × jumlah','JIKA total ≥ 100000 MAKA','  diskon ← 10','SELAIN ITU','  diskon ← 0','AKHIR JIKA','bayar ← total − total × diskon / 100','OUTPUT bayar','SELESAI']},
+{n:'Loop Coaster',ic:'🎢',cl:0xa78bfa,q:'Cetak Angka 1–10 dengan FOR',d:'Looping FOR: pengulangan dengan jumlah iterasi yang pasti.',I:[],
+N:[{t:'s',x:'MULAI'},{t:'p',x:'i ← 1',f:e=>e.i=1},{t:'d',x:'i ≤ 10 ?',f:e=>e.i<=10,y:3,n:5},{t:'o',x:'OUTPUT i',f:e=>'Angka ke-'+e.i},{t:'p',x:'i ← i + 1',f:e=>e.i++,g:2},{t:'e',x:'SELESAI'}],
+P:['MULAI','FOR i ← 1 TO 10 DO','  OUTPUT i','NEXT i','SELESAI']},
+{n:'Station Control',ic:'🚉',cl:0x22d3ee,q:'Antrean Bank/Parkir dengan WHILE',d:'Looping WHILE: berulang selama kondisi masih benar.',I:[['a','Jumlah antrean (maks 8)',4]],
+N:[{t:'s',x:'MULAI'},{t:'i',x:'INPUT antrean'},{t:'d',x:'antrean > 0 ?',f:e=>e.a>0,y:3,n:5},{t:'o',x:'OUTPUT “Layani nasabah”',f:e=>'Layani nasabah, sisa '+(e.a-1)},{t:'p',x:'antrean ← antrean − 1',f:e=>e.a--,g:2},{t:'o',x:'OUTPUT “Antrean kosong”',f:e=>'🏁 Antrean kosong'},{t:'e',x:'SELESAI'}],
+P:['MULAI','INPUT antrean','WHILE antrean > 0 DO','  OUTPUT “Layani nasabah”','  antrean ← antrean − 1','END WHILE','OUTPUT “Antrean kosong”','SELESAI']}];
+const S={z:0,max:0,av:0,name:'Pemain',xp:0,sel:0,ran:[],done:[],tries:[],pool:[],ans:[],ref:{a:'',b:'',c:'',r:[3,3,3]},t:4050};
+let TM,RT,AC;
+function beep(f=520,d=.1){try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain();o.type='triangle';o.frequency.value=f;g.gain.value=.05;o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+d)}catch(e){}}
+const rank=()=>S.xp>=110?'Algorithm Master 🏆':S.xp>=70?'Code Ranger 🚀':S.xp>=35?'Logic Explorer 🧭':'Rookie Coder 🌱';
+const hud=()=>{$('#xp').textContent='⭐ '+S.xp+' XP'};
+function nav(){$('#nav').innerHTML=Z.map((z,i)=>`<button class="nv ${i==S.z?'on':''}" ${i>S.max?'disabled':''} onclick="go(${i})">${i+1}<span class=tt> ${z[0]}</span></button>`).join('')}
+function go(i){clearInterval(RT);S.z=i;S.max=Math.max(S.max,i);moveAv();nav();draw()}
+function draw(){const p=$('#panel');p.innerHTML=[z0,z1,z2,z3,z4][S.z]();p.scrollTop=0}
+function exec(w,v){const e={...v},log=[],tr=[];let i=0;for(let k=0;k<90;k++){const n=w.N[i];let nx=n.g??i+1;if(n.t=='p')n.f(e);else if(n.t=='o')log.push(n.f(e));else if(n.t=='d')nx=n.f(e)?n.y:n.n;tr.push({i,e:{...e},log:[...log]});if(n.t=='e')break;i=nx}return tr}
+function z0(){return `<h2>🎮 Halo, Penjelajah! Aku Game Master-mu</h2><p>Selamat datang di <b>Wahana Algoritma 3D</b>. Misimu: taklukkan 7 wahana untuk menguasai <b>Flowchart &amp; Pseudocode</b> dalam <b>1,5 JP (67,5 menit)</b>. Kumpulkan XP, raih pangkat, lalu klaim sertifikat PNG!</p>
+<h3>⏱ Alokasi Waktu</h3><ul>${Z.map((z,i)=>`<li>Zone ${i+1}: ${z[0]} — ${z[1]} menit</li>`).join('')}</ul>
+<h3>1 · Pilih Avatar</h3><div class=row>${AV.map((a,i)=>`<button class="av ${i==S.av?'on':''}" onclick="S.av=${i};mk();draw()">${a[0]}</button>`).join('')}</div>
+<h3>2 · Nama Pemain</h3><input id=nm maxlength=24 placeholder="Tulis namamu…" value="${S.name=='Pemain'?'':esc(S.name)}">
+<h3>3 · Peta 7 Wahana</h3><div>${W.map((w,i)=>`<div>${w.ic} <b>Wahana ${i+1}</b> — ${w.q}</div>`).join('')}</div>
+<button class="btn big" onclick="start()">▶ MULAI MISI — Wahana mana duluan?</button>`}
+function start(){S.name=($('#nm').value||'Pemain').trim();beep(660,.2);if(!TM)TM=setInterval(()=>{S.t=Math.max(0,S.t-1);$('#tm').textContent=S.t?'⏱ '+fm(S.t):'⏰ 0:00'},1000);go(1)}
+function pick(i){S.sel=i;moveAv();draw()}
+const tiles=()=>`<div class=row>${W.map((x,i)=>`<button class="chip ${i==S.sel?'on':''}" title="${esc(x.q)}" onclick="pick(${i})">${x.ic} ${i+1}${S.done[i]?' ✅':''}</button>`).join('')}</div>`;
+function z1(){const w=W[S.sel];return `${tiles()}<h2>${w.ic} Wahana ${S.sel+1}: ${w.n}</h2><p><b>${w.q}</b></p><p>${w.d}</p>
+<div class=cols><div><h3>Flowchart</h3>${w.N.map((n,i)=>`<div class="nd ${n.t}" id="n${i}"><b>#${i}</b> ${esc(n.x)}${n.t=='d'?`<br><small>Ya → #${n.y} · Tidak → #${n.n}</small>`:n.g!==undefined?`<br><small>↪ lanjut ke #${n.g}</small>`:''}</div>${n.t=='e'?'':'<div class=ar>▼</div>'}`).join('')}<p style="font-size:11px;color:var(--mu)">⬭ Mulai/Selesai · ▱ Input/Output · ▭ Proses · ◯ Keputusan</p></div>
+<div><h3>Pseudocode</h3><pre>${w.P.map(esc).join('\n')}</pre><h3>Input</h3>${w.I.map(([k,l,d,o])=>`<label>${l}${o?`<select id="in_${k}">${o.map(x=>`<option>${x}</option>`).join('')}</select>`:`<input id="in_${k}" value="${d}" ${typeof d=='number'?'type=number':''}>`}</label>`).join('')||'<p style="color:var(--mu)">Tanpa input.</p>'}
+<button class=btn onclick="run()">▶ JALANKAN SIMULASI</button><h3>Memori &amp; Output</h3><div id=vars>—</div><div id=out></div></div></div>
+<button class=btn onclick="go(2)">Lanjut ke Challenge Arena ➜</button>`}
+function run(){const w=W[S.sel],v={};w.I.forEach(([k,l,d])=>{const x=$('#in_'+k).value;v[k]=typeof d=='number'?+x:x});if(S.sel==6)v.a=Math.min(8,Math.max(0,v.a));
+const tr=exec(w,v);let k=0;clearInterval(RT);RT=setInterval(()=>{const s=tr[k];document.querySelectorAll('.nd.on').forEach(x=>x.classList.remove('on'));const nd=$('#n'+s.i);if(!nd){clearInterval(RT);return}nd.classList.add('on');nd.scrollIntoView({block:'nearest'});
+$('#vars').innerHTML=Object.entries(s.e).map(([a,b])=>`<code>${a} = ${esc(b)}</code>`).join('')||'(belum ada variabel)';$('#out').innerHTML=s.log.map(x=>'▸ '+esc(x)).join('<br>');beep(300+s.i*45,.05);
+if(++k>=tr.length){clearInterval(RT);beep(880,.2);if(!S.ran[S.sel]){S.ran[S.sel]=1;S.xp+=2;hud()}S.max=Math.max(S.max,2);nav()}},S.sel>4?240:520)}
+function ens(i){if(!S.pool[i]){const a=W[i].P.map((_,j)=>j);for(let j=a.length-1;j>0;j--){const r=Math.floor(Math.random()*(j+1));[a[j],a[r]]=[a[r],a[j]]}S.pool[i]=a;S.ans[i]=[];S.tries[i]=0}}
+function z2(){const i=S.sel,w=W[i];ens(i);const n=S.done.filter(Boolean).length;return `${tiles()}<h2>${w.ic} Quest ${i+1}: ${w.q}</h2><p>Susun pseudocode dengan benar! Klik kartu dari <b>Bank Kode</b> secara berurutan. Klik kartu jawaban untuk mengembalikannya.</p>
+<h3>Bank Kode</h3><div class=bank>${S.pool[i].filter(j=>!S.ans[i].includes(j)).map(j=>`<button class=cd onclick="add(${j})">${esc(w.P[j])}</button>`).join('')}</div>
+<h3>Jawabanmu</h3><div class="bank">${S.ans[i].map((j,k)=>`<button class="cd a" onclick="rm(${k})">${k+1}. ${esc(w.P[j])}</button>`).join('')}</div>
+<div id=msg class=ok>${S.done[i]?'✅ Quest selesai!':''}</div><button class=btn onclick="chk()">✔ CEK JAWABAN</button> <button class=btn onclick="S.ans[S.sel]=[];draw()">↺ Ulang</button>
+<p style="margin-top:12px">Progres: <b>${n}/7</b> wahana tuntas</p><button class=btn ${n?'':'disabled'} onclick="go(3)">Lanjut ke Reflection Camp ➜</button>`}
+function add(j){S.ans[S.sel].push(j);beep(420,.04);draw()}function rm(k){S.ans[S.sel].splice(k,1);draw()}
+function chk(){const i=S.sel,P=W[i].P,m=$('#msg');if(S.ans[i].length<P.length){m.className='bad';m.textContent='Susun semua baris dulu ya!';return}
+if(S.ans[i].map(j=>P[j]).join('|')==P.join('|')){if(!S.done[i]){S.done[i]=1;S.xp+=Math.max(5,20-5*S.tries[i]);hud();pulse=60}m.className='ok';m.textContent='🎉 BENAR! XP bertambah.';beep(880,.25);S.max=Math.max(S.max,3);nav();setTimeout(draw,900)}
+else{S.tries[i]++;m.className='bad';m.textContent='❌ Belum tepat. Perhatikan urutan & indentasi. Percobaan ke-'+S.tries[i];beep(180,.25)}}
+function z3(){const R=S.ref,q=['Sequence (urutan)','Selection (percabangan)','Looping (perulangan)'];return `<h2>🏕️ Reflection Camp</h2><p>Duduk sejenak di api unggun. Nilai pemahamanmu jujur ya!</p>
+${q.map((x,i)=>`<label>Pemahaman ${x}<select id="rt${i}">${[1,2,3,4,5].map(n=>`<option value=${n} ${R.r[i]==n?'selected':''}>${'⭐'.repeat(n)}</option>`).join('')}</select></label>`).join('')}
+<label>Apa yang paling kamu pahami hari ini?<textarea id=r1 rows=2>${esc(R.a)}</textarea></label><label>Bagian mana yang masih sulit?<textarea id=r2 rows=2>${esc(R.b)}</textarea></label><label>Rencana belajarku selanjutnya:<textarea id=r3 rows=2>${esc(R.c)}</textarea></label>
+<button class=btn onclick="saveRef()">Lanjut ke Victory Hall ➜</button>`}
+function saveRef(){S.ref={a:$('#r1').value,b:$('#r2').value,c:$('#r3').value,r:[0,1,2].map(i=>+$('#rt'+i).value)};S.xp+=3;hud();go(4)}
+function z4(){return `<h2>🏆 Victory Hall</h2><p>Pemain: <b>${esc(S.name)}</b></p><p>Pangkat: <b>${rank()}</b> · ${S.xp} XP · Wahana tuntas ${S.done.filter(Boolean).length}/7</p><button class="btn big" onclick="claim()">🎁 FINISH / CLAIM REWARD</button><div id=pv></div>`}
+function wrap(g,t,x,y,mw,lh,ml){let l='',n=0;for(const w of t.split(' ')){const s=l?l+' '+w:w;if(g.measureText(s).width>mw&&l){g.fillText(l,x,y+n*lh);l=w;if(++n>=ml)return}else l=s}if(l&&n<ml)g.fillText(l,x,y+n*lh)}
+function cert(){const c=document.createElement('canvas');c.width=1200;c.height=800;const g=c.getContext('2d'),bg=g.createLinearGradient(0,0,1200,800);bg.addColorStop(0,'#070b1d');bg.addColorStop(1,'#2a1458');g.fillStyle=bg;g.fillRect(0,0,1200,800);
+g.strokeStyle='#22d3ee';g.lineWidth=6;g.strokeRect(30,30,1140,740);g.strokeStyle='#f472b6';g.lineWidth=2;g.strokeRect(46,46,1108,708);g.textAlign='center';
+g.fillStyle='#fff';g.font='bold 54px system-ui,sans-serif';g.fillText('SERTIFIKAT PRESTASI',600,130);g.fillStyle='#9aa6d6';g.font='24px system-ui,sans-serif';g.fillText('Wahana Algoritma 3D · Flowchart & Pseudocode · Informatika',600,175);
+g.fillStyle='#fff';g.fillText('diberikan kepada',600,250);g.fillStyle='#22d3ee';g.font='bold 70px system-ui,sans-serif';g.fillText(S.name,600,330);g.fillStyle='#fff';g.font='bold 36px system-ui,sans-serif';g.fillText(rank().replace(/[^\x00-\u2FFF]/g,'').trim()+'  ·  '+S.xp+' XP',600,400);
+W.forEach((w,i)=>{const x=210+i*130;g.beginPath();g.arc(x,490,42,0,7);g.fillStyle=S.done[i]?'#'+w.cl.toString(16).padStart(6,'0'):'#ffffff22';g.fill();g.fillStyle=S.done[i]?'#070b1d':'#9aa6d6';g.font='bold 30px system-ui,sans-serif';g.fillText(i+1,x,501);g.font='14px system-ui,sans-serif';g.fillStyle='#9aa6d6';g.fillText(w.n,x,562)});
+const t=S.ref.c||S.ref.a;if(t){g.fillStyle='#e8ecff';g.font='italic 22px system-ui,sans-serif';wrap(g,'Refleksi: “'+t.slice(0,160)+'”',600,630,900,30,2)}
+g.fillStyle='#9aa6d6';g.font='20px system-ui,sans-serif';g.fillText(new Date().toLocaleDateString('id-ID',{dateStyle:'long'})+'  ·  Game Master Informatika',600,730);return c}
+async function claim(){beep(990,.3);const c=cert();$('#pv').innerHTML='<img alt="Sertifikat" src="'+c.toDataURL('image/png')+'"><p id=dm style="color:var(--mu)">Menyiapkan unduhan…</p>';
+try{const dl=window.claude&&await claude.use('downloads');const b=await new Promise(r=>c.toBlob(r,'image/png'));if(!dl)throw 0;await dl.save({filename:'Sertifikat-'+S.name.replace(/[^\w-]+/g,'_')+'.png',data:b});$('#dm').textContent='✅ Sertifikat tersimpan!'}catch(e){$('#dm').textContent='Tekan lama / klik kanan gambar di atas untuk menyimpan PNG.'}}
+/* ===== 3D ===== */
+let R,sc,cam,av,tw=[],tx=0,tz=0,pulse=0,T=0;
+function moveAv(){if(S.z>=1){const a=S.sel/7*Math.PI*2;tx=Math.cos(a)*5.5;tz=Math.sin(a)*5.5}else{tx=tz=0}}
+function mk(){if(!sc)return;if(av)sc.remove(av);const c=AV[S.av][1],m=new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:.3}),b=new THREE.Mesh(new THREE.CylinderGeometry(.35,.45,1,16),m);b.position.y=.5;
+const h=new THREE.Mesh([new THREE.BoxGeometry(.7,.6,.6),new THREE.SphereGeometry(.4,16,16),new THREE.ConeGeometry(.4,.8,5)][S.av],m);h.position.y=1.4;av=new THREE.Group();av.add(b,h);if(S.z>0)av.position.set(tx,0,tz);sc.add(av)}
+try{R=new THREE.WebGLRenderer({canvas:$('#c'),antialias:true,alpha:true});sc=new THREE.Scene();sc.fog=new THREE.Fog(0x070b1d,20,48);cam=new THREE.PerspectiveCamera(55,1,.1,100);sc.add(new THREE.AmbientLight(0x8899ff,.7));const pl=new THREE.PointLight(0xffffff,1.3,70);pl.position.set(0,12,0);sc.add(pl);
+const gr=new THREE.Mesh(new THREE.CircleGeometry(16,48),new THREE.MeshStandardMaterial({color:0x0d1440}));gr.rotation.x=-Math.PI/2;sc.add(gr);const gd=new THREE.GridHelper(32,32,0x22d3ee,0x1e2a6b);gd.position.y=.02;sc.add(gd);
+W.forEach((w,i)=>{const a=i/7*Math.PI*2,g=new THREE.Group(),m=new THREE.MeshStandardMaterial({color:w.cl,emissive:w.cl,emissiveIntensity:.35}),b=new THREE.Mesh(new THREE.CylinderGeometry(1,1.2,1+i%3*.6,24),m);b.position.y=.5+i%3*.3;
+const r=new THREE.Mesh(new THREE.TorusGeometry(.9,.12,12,32),m);r.position.y=2.4;r.rotation.x=Math.PI/2;g.add(b,r);g.position.set(Math.cos(a)*8.5,0,Math.sin(a)*8.5);sc.add(g);tw.push({g,r,m})});
+mk();const rs=()=>{R.setPixelRatio(Math.min(devicePixelRatio,2));R.setSize(innerWidth,innerHeight,false);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix()};rs();addEventListener('resize',rs);
+(function L(){requestAnimationFrame(L);T+=.016;const an=T*.1;cam.position.set(Math.cos(an)*18,9,Math.sin(an)*18);cam.lookAt(0,1,0);
+tw.forEach((o,i)=>{o.r.rotation.z+=.03;o.m.emissiveIntensity=S.z>0&&i==S.sel?.9+.3*Math.sin(T*5):.35;o.g.scale.setScalar(S.done[i]?1.15:1)});
+av.position.x+=(tx-av.position.x)*.06;av.position.z+=(tz-av.position.z)*.06;av.position.y=Math.abs(Math.sin(T*3))*.15+(pulse>0?Math.abs(Math.sin(pulse*.3))*.8:0);if(pulse>0)pulse--;av.rotation.y+=.02;R.render(sc,cam)})()}catch(e){R=null;sc=null}
+nav();draw();
+</script></body></html>
